@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    setupCode();
+    setupHIPO();
+});
+
+function setupCode() {
     let code2 = document.querySelector('.code-2');
     const code2Pre = document.querySelector('.code-text-2').innerText;
     if (code2Pre.length == 0) {
@@ -22,4 +27,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         });
     }
-});
+}
+
+function setupHIPO() {
+    let hipo = document.getElementById('hipo');
+    if (hipo.childElementCount > 1) {
+        hipo.style.display = "block";
+        document.getElementById('hipo-ref').style.display = "inline"
+    }
+}

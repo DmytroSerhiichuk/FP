@@ -43,7 +43,7 @@ nav a {
     height: max-content;
 
     display: grid;
-    grid-template-columns: minmax(150px, 1fr) minmax(200px, 950px) minmax(15px, 1fr);
+    grid-template-columns: minmax(210px, 1fr) minmax(200px, 950px) minmax(15px, 1fr);
 }
 
 main {
@@ -108,4 +108,8 @@ main {
 
 button {
     cursor: pointer;
+}
+
+#hipo, #hipo-ref {
+    display: none;
 }
