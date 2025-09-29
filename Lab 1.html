@@ -24,7 +24,7 @@
             <a href="#conditions">Умова</a>
             <a href="#analysis">Аналіз</a>
             <a href="#hipo" id="hipo-ref">HIPO Діаграма</a>
-            <a href="#code-wrapper-container">Код</a>
+            <a href="#code-section">Код</a>
             <a href="#results">Результати</a>
             <a href="#validation">Перевірка</a>
             <a href="#ai">Перевірка коду ШІ</a>
@@ -38,16 +38,16 @@
 
     <div id="main-wrapper">
         <main>
-            <div id="goal">
-                <h3>Мета</h3>
+            <details id="goal" open>
+                <summary>Мета</summary>
                 <p>Сформувати декларативне мислення в галузі програмування завдяки застосуванню принципів функціонального програмування. Опанувати техніку застосування рекурсивних функцій для обчислювальних процесів і здійснити дослідження ефективності рекурсивних процесів.</p>
-            </div>
-            <div id="conditions">
-                <h3>Умова</h3>
+            </details>
+            <details id="conditions" open>
+                <summary>Умова</summary>
                 <img src="assets/images/lab1-conditions.png">
-            </div>
-            <div id="analysis">
-                <h3>Аналіз</h3>
+            </details>
+            <details id="analysis" open>
+                <summary>Аналіз</summary>
                 <h4>Завдання 1</h4>
 
 <p>
@@ -75,22 +75,23 @@
     Для виконання даного завдання необхідно створити функцію, яка при кожному виклику зчитує з консолі число. Якщо було введено число 0, то функція пише у консоль повідомлення "END", що повідомляє про завершення роботи, 
     інакше функція повторно викликає себе, але перед цим, якщо введене число парне, що визначається через функцію <strong>even?</strong>, то воно повторно виводиться у консоль. 
 </p>
-            </div>
-            <div id="hipo">
-                <h3>HIPO Діаграма</h3>
+            </details>
+            <details id="hipo" open>
+                <summary>HIPO Діаграма</summary>
                 
-            </div>
-            <div id="code-wrapper-container">
-                <h3>Код</h3>
-                <code class="code">
-                <div class="copy-code-top-container">
-                    Code: Task1
-                    <button class="copy-code-btn">
-                        <img class="copy-code-icon" src="assets/copy-icon.svg">
-                    </button>
-                </div>
-                
-                <pre class="code-text">#lang racket
+            </details>
+            <details id="code-section" open>
+                <summary>Код</summary>
+                <div id="code-wrapper-container">
+                    <code class="code">
+                        <div class="copy-code-top-container">
+                            Code: Task1
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text">#lang racket
 
 (displayln "Лаб 1 (Варіант 11) - Завданя 1")
 (displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
@@ -170,17 +171,17 @@
 
 (printf "First ~a elements of Fibonacci sequence:\n" m)
 (print-seq 1 0 0)</pre>
-                </code>
+                    </code>
 
-                <code class="code code-2">
-                    <div class="copy-code-top-container">
-                        Code: Task 2
-                        <button class="copy-code-btn">
-                            <img class="copy-code-icon" src="assets/copy-icon.svg">
-                        </button>
-                    </div>
-                    
-                    <pre class="code-text code-text-2">#lang racket
+                    <code class="code code-2">
+                        <div class="copy-code-top-container">
+                            Code: Task 2
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text code-text-2">#lang racket
 
 (displayln "Лаб 1 (Варіант 11) - Завданя 2")
 (displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
@@ -195,16 +196,17 @@
     (else (f))))
   
 (f)</pre>
-                </code>
-            </div>
-            <div id="results">
-                <h3>Результати</h3>
+                    </code>
+                </div>
+            </details>
+            <details id="results" open>
+                <summary>Результати</summary>
                 <img src="assets/images/lab1-result1.png">
 <img src="assets/images/lab1-result1 (2).png">
 <img src="assets/images/lab1-result2.png">
-            </div>
-            <div id="validation">
-                <h3>Перевірка</h3>
+            </details>
+            <details id="validation" open>
+                <summary>Перевірка</summary>
                 <h4>Завдання 1</h4>
 
 <p>
@@ -227,9 +229,9 @@
     При кожному введені парного числа, програма повторно виводить їх у консоль, як і було вказано в умові. 
     Програма не виконує повторне виведення непарних чисел. При введені 0, програма виводить повідомлення END, що завершує роботу.
 </p>
-            </div>
-            <div id="ai">
-                <h3>Перевірка коду ШІ</h3>
+            </details>
+            <details id="ai" open>
+                <summary>Перевірка коду ШІ</summary>
                 <h4>Завдання 1</h4>
 
 <p>Було використано ChatGPT</p>
@@ -408,16 +410,16 @@
         </pre>
     </code>
 </div>
-            </div>
-            <div id="conclusion">
-                <h3>Висновок</h3>
+            </details>
+            <details id="conclusion" open>
+                <summary>Висновок</summary>
                 <p>
     В даній роботі було продемонстровано реалізації звичайної рекурсії, хвостої та ітеративного процесу. Відповідно до отриманих результатів було визначено, що для пошуку 
     елементів з послідовності Фібоначчі, хвостова рекурсія та ітеративний процес (який в даному випадку не відрізняється від хвостової рекурсії) виконуються значно швидше, 
     оскільки виконується менше викликів функцій. Глибина рекурсії у звичайній рекурсії менша на 1, та відповідає значення n, що пояснюється тим, що інші методи мають вкладену функцію, що 
     додає один додатковий виклик для функції-обгортки.
 </p>
-            </div>
+            </details>
         </main>
     </div>
 

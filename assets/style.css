@@ -113,3 +113,8 @@ button {
 #hipo, #hipo-ref {
     display: none;
 }
+
+summary {
+    font-weight: bold;
+    font-size: 20px;
+}

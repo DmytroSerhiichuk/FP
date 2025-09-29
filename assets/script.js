@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function setupCode() {
     let code2 = document.querySelector('.code-2');
-    const code2Pre = document.querySelector('.code-text-2').innerText;
+    const code2Pre = document.querySelector('.code-text-2').textContent;
     if (code2Pre.length == 0) {
         document.getElementById("code-wrapper-container").removeChild(code2);
     }
