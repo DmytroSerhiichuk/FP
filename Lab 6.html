@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/style.css">
+    <title>Lab 6</title>
+</head>
+
+<body>
+    <div class="navigation-container">
+        <nav class="lab-nav">
+            <a href="index.html">Титулка</a>
+            <a href="Lab 1.html">Lab 1</a>
+            <a href="Lab 2.html">Lab 2</a>
+            <a href="Lab 3.html">Lab 3</a>
+            <a href="Lab 4.html">Lab 4</a>
+            <a href="Lab 5.html">Lab 5</a>
+            <a href="Lab 6.html">Lab 6</a>
+        </nav>
+
+        <nav class="page-nav">
+            <a href="#goal">Мета</a>
+            <a href="#conditions">Умова</a>
+            <a href="#analysis">Аналіз</a>
+            <a href="#hipo" id="hipo-ref">HIPO Діаграма</a>
+            <a href="#code-section">Код</a>
+            <a href="#results">Результати</a>
+            <a href="#validation">Перевірка</a>
+            <a href="#ai">Перевірка коду ШІ</a>
+            <a href="#conclusion">Висновок</a>
+        </nav>
+    </div>
+
+    <header>
+        <h1>Lab 6</h1>
+    </header>
+
+    <div id="main-wrapper">
+        <main>
+            <details id="goal" open>
+                <summary>Мета</summary>
+                <p>Опанувати теоретичні основи обробки структур типу векторів і матриць, стеків та черг мовами функціонального програмування та розробити програми їх реалізації</p>
+            </details>
+            <details id="conditions" open>
+                <summary>Умова</summary>
+                <img src="assets/images/lab6-conditions.png" alt="">
+            </details>
+            <details id="analysis" open>
+                <summary>Аналіз</summary>
+                <h4>Завдання 1</h4>
+
+<p>
+    Для забезпечення чергування елементів, було реалізовано функцію, яка приймає 
+    вектор та функцію, яка перевіряє, чи перевіряє даний елемент умові. Також ще 
+    одним аргументом є індекс попереднього елемента, що відповідає умові. Таким 
+    чином ми можемо по черзі виконувати пошук наступного числа, більшого за нуль, 
+    а потім - меншого за нуль
+</p>
+
+<h4>Завдання 2</h4>
+
+<p>
+    Для роботи з чергами можна використовувати пакет <strong>data/queue</strong>. 
+    Він вже має багато зручних методів для роботи з чергами, проте для даного 
+    завдання, ще можна додати отримання останнього елемента черги. Це можна 
+    реалізувати перетворивши чергу в список, обернути його та взяти перший 
+    елемента через функцію <strong>car</strong>
+</p>
+            </details>
+            <details id="hipo" open>
+                <summary>HIPO Діаграма</summary>
+                <h4>Завдання 1</h4>
+
+<img src="assets/images/lab6-hipo1.png" alt="">
+
+<h4>Завдання 2</h4>
+
+<img src="assets/images/lab6-hipo2.png" alt="">
+            </details>
+            <details id="code-section" open>
+                <summary>Код</summary>
+                <div id="code-wrapper-container">
+                    <code class="code">
+                        <div class="copy-code-top-container">
+                            Code: Task1
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text">#lang racket
+
+(displayln "Лаб 6 (Варіант 11) - Завданя 1")
+(displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
+(newline)
+
+; Перевіряє, чи вектор складається лише з чисел
+(define (number-vector? vec [index 0])
+  (if (< index (vector-length vec))
+    (if (number? (vector-ref vec index)) 
+      (number-vector? vec (+ index 1)) 
+      #f)
+    #t))
+
+; Читає вектор з консолі, перевіряючи вхідні дані на коректність
+(define (read-vector)
+  (printf "Введіть вектор: ")
+  (define vec (read))
+  (cond
+    [(and (vector? vec) (number-vector? vec)) vec]
+    [else
+     (printf "Некоректні вхідні дані\n")
+     (read-vector)]))
+
+; Прибирає елементи з вектора, які є нулями
+(define (remove-zeros vec)
+  ; Ітерує вектор та виконує фільтрацію
+  ; - filtered-vector : акумулятор-вектор без нульових елементів
+  ; - index           :  індекс поточної ітерації
+  (define (iterate [filtered-vector #()] [index 0])
+    (cond
+      [(< index (vector-length vec))
+       (define elem (vector-ref vec index))
+       (define next-vec (if (zero? elem)
+                            filtered-vector
+                            (vector-append filtered-vector (vector elem))))
+       (iterate next-vec (+ index 1))]
+      [else filtered-vector]))
+  (iterate))
+
+; Повертає індекс наступного елемента, який відповідає умові:
+; - vec        : вхідний вектор
+; - prev-index : індекс попереднього елемента, який відповідає умові
+; - condition? : функція, яка перевіряє відповідність елемента умові
+; Повертає індекс елемента або #false якщо досягнуто кінець вектора
+(define (get-next-elem-index-with-condition vec prev-index condition?)
+  (define (iterate [index (+ prev-index 1)])
+    (cond
+      [(< index (vector-length vec))
+        (if (condition? (vector-ref vec index))
+          index
+          (iterate (+ index 1)))]
+      [else #f]))
+  (iterate))
+
+; Впорядковує вектор таким чином, щоб знак елементів чергувався (плюс - мінус)
+(define (arrange-vector vec)
+  ; Ітерує вектор та впорядкою його
+  ; - arranged-vector     : акумулятор, що репрезентує впорядкований вектор
+  ; - prev-signed-index   : індекс попереднього елемента, який < 0
+  ; - prev-unsigned-index : індекс попереднього елемента, який >= 0
+  ; - sign                : знак числа, на даній ітерації
+  (define (do-arrange [arranged-vector #()] [prev-signed-index -1] [prev-unsigned-index -1] [sign #f])
+    (cond
+      [(or prev-signed-index prev-unsigned-index)
+        (cond
+          [sign
+            (define next-signed-index (get-next-elem-index-with-condition vec prev-signed-index (lambda (elem) (< elem 0))))
+            (define next-vec (if next-signed-index
+                                 (vector-append arranged-vector (vector (vector-ref vec next-signed-index)))
+                                 arranged-vector))
+             (do-arrange 
+                next-vec
+                next-signed-index 
+                prev-unsigned-index
+                (if prev-unsigned-index #f #t))]
+          [else
+            (define next-unsigned-index (get-next-elem-index-with-condition vec prev-unsigned-index (lambda (elem) (>= elem 0))))
+            (define next-vec (if next-unsigned-index
+                                 (vector-append arranged-vector (vector (vector-ref vec next-unsigned-index)))
+                                 arranged-vector))
+            (do-arrange 
+                next-vec
+                prev-signed-index 
+                next-unsigned-index
+                (if prev-signed-index #t #f))])]
+      [else arranged-vector]))
+  (do-arrange))
+
+(define my-vector (read-vector))
+(newline)
+(define vector-without-zeros (remove-zeros my-vector))
+(printf "Вектор без нулів: ~a\n" vector-without-zeros)
+(define arranged-vector (arrange-vector vector-without-zeros))
+(printf "Впорядкований вектор: ~a\n" arranged-vector)</pre>
+                    </code>
+
+                    <code class="code code-2">
+                        <div class="copy-code-top-container">
+                            Code: Task 2
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text code-text-2">#lang racket
+(require data/queue)
+
+(displayln "Лаб 6 (Варіант 11) - Завданя 2")
+(displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
+(newline)
+
+; Читає значення з консолі та обмежує його до діапазону [min; max]
+(define (read-clamp min max)
+  (define input (read))
+  (cond
+    [(< input min) min]
+    [(> input max) max]
+    [else input]))
+
+; Виводить чергу у консоль
+(define (print-queue queue)
+  (printf "Черга: ~a\n\n" (queue->list queue)))
+
+; Генерує початкову чергу з елементами від 1 до size
+(define (generate-start-queue size)
+  (define q (make-queue))
+  (define (fill-iter [iter 1])
+    (enqueue! q iter)
+    (when (< iter size) (fill-iter (+ iter 1))))
+  (fill-iter)
+  q)
+
+; Приймає загальний час в секундах ти виводить його у форматі: x хвилин y секунд
+(define (print-time total-seconds)
+  (define minutes (quotient total-seconds 60))
+  (define seconds (remainder total-seconds 60))
+  (printf "Час від початку моделювання: ~a хвилин ~a секунд\n" minutes seconds))
+
+(printf "Введіть розмір черги [5; 25]: ")
+(define QUEUE_SIZE (read-clamp 5 25))
+(printf "Вкажіть час обслуговування одного клієнта (сек) [30; 300]: ")
+(define SERVICE_TIME (read-clamp 30 300))
+(printf "Вкажіть час, за який до черги додається новий клієнт (сек) [60; 180]: ")
+(define NEW_CUSTOMER_TIME (read-clamp 60 180))
+(define START_QUEUE_MAX_SIZE (min QUEUE_SIZE 15))
+(printf "Вкажіть початковий розмір черги: [0; ~a]: " START_QUEUE_MAX_SIZE)
+(define START_QUEUE_LENGTH (read-clamp 0 START_QUEUE_MAX_SIZE))
+(printf "Вкажіть час моделювання (хв) [10; 30]: ")
+(define DURATION (* (read-clamp 10 30) 60))
+
+; Повертає хвіст черги або #false, якщо черга пуста
+(define (queue-tail q)
+  (if (queue-empty? q) #f (car (reverse (queue->list q)))))
+
+; Додає нового клієнта до черги q. Новий клієнт має значення на 1 більше останнього або 1, якщо черга пуста
+(define (add-new-customer q)
+  (define tail (queue-tail q))
+  (if (number? tail)
+    (enqueue! q (+ 1 tail))
+    (enqueue! q 1))
+  (printf "Клієнт ~a приєднався до черги\n" (queue-tail q)))
+
+; Видаляє останній елемент черги, моделюючи ситуацію, коли клієнта обслужено
+(define (remove-customer-from-queue q)
+  (when (not (queue-empty? q))
+    (printf "Клієнта ~a було обслужено\n" (dequeue! q))))
+
+; Ітеративна модель, яка виконує кожну секунду моделі
+; - q: черга клієнтів
+; - passed-time: час, що пройшоов від початку моделювання (в секундах)
+(define (model q [passed-time 0])
+  (when (< passed-time DURATION)
+    (define add-new-customer? (= 0 (modulo passed-time NEW_CUSTOMER_TIME)))
+    (define remove-customer? (and (= 0 (modulo passed-time SERVICE_TIME)) (not (queue-empty? q))))
+    (cond
+      [(= passed-time 0)
+        (print-time passed-time)
+        (print-queue q)]
+      [(and add-new-customer? remove-customer?)
+        (print-time passed-time)
+        (remove-customer-from-queue q)
+        (add-new-customer q)
+        (print-queue q)]
+      [add-new-customer? 
+        (print-time passed-time)
+        (add-new-customer q)
+        (print-queue q)]
+      [remove-customer?
+        (print-time passed-time)
+        (remove-customer-from-queue q)
+        (print-queue q)])
+    (model q (+ passed-time 1))))
+
+(define my-queue (generate-start-queue START_QUEUE_LENGTH))
+(model my-queue)</pre>
+                    </code>
+                </div>
+            </details>
+            <details id="results" open>
+                <summary>Результати</summary>
+                <h4>Завдання 1</h4>
+
+<img src="assets/images/lab6-result1.png" alt="">
+
+<h4>Завдання 2</h4>
+
+<img src="assets/images/lab6-result2.png" alt="">
+            </details>
+            <details id="validation" open>
+                <summary>Перевірка</summary>
+                <p>Завдання не потребують перевірки</p>
+            </details>
+            <details id="ai" open>
+                <summary>Перевірка коду ШІ</summary>
+                <h4>Завдання 1</h4>
+
+<p>Введний запит: "чи відповідає даний код на мові програмування racket критеріям простоти та clean code? (код завдання №1)"</p>
+
+<p>Відповідь Chat GPT:</p>
+
+<p>Код виглядає акуратно й добре структуровано, але якщо оцінювати його з точки зору принципів простоти та clean code, то є як позитивні сторони, так і моменти, які можна покращити. Розберімо детально 👇</p>
+
+<p>✅ Позитивні сторони</p>
+
+<ol>
+    <li>
+        <p>Чіткі коментарі</p>
+        <p>Кожна функція має зрозумілий опис: призначення, параметри, очікуваний результат. Це чудово для читабельності, особливо в Racket, де структура рекурсій може бути заплутаною.</p>
+    </li>
+    <li>
+        <p>Хороше розділення обов’язків</p>
+        <p>Кожна функція робить щось одне:</p>
+        <ul>
+            <li>number-vector? — перевіряє тип даних</li>
+            <li>read-vector — читає і валідує введення</li>
+            <li>remove-zeros — очищує вектор</li>
+            <li>arrange-vector — чергує знаки</li>
+        </ul>
+        <p>Це відповідає Single Responsibility Principle</p>
+    </li>
+    <li>Функціональний підхід з рекурсією реалізовано грамотно — без зайвих побічних ефектів, немає глобальних змінних</li>
+    <li>Використання локальних допоміжних функцій (iterate, do-arrange) — гарна практика для ізоляції логіки та збереження чистоти коду</li>
+</ol>
+
+<p>⚠️ Моменти, які можна покращити</p>
+
+<ol>
+    <li>
+        <p>Зайва складність у arrange-vector</p>
+        <p>Функція дуже важка для сприйняття:</p>
+        <ul>
+            <li>вона одночасно веде три індекси (prev-signed-index, prev-unsigned-index, sign)</li>
+            <li>має вкладену рекурсію та логіку з багатьма умовами</li>
+        </ul>
+        <p>🟢 Порада:</p>
+        <p>Розбий функцію на дрібніші:</p>
+        <ul>
+            <li>окрема функція find-next-positive</li>
+            <li>окрема find-next-negative</li>
+            <li>і головна, яка просто чергує їх.</li>
+        </ul>
+        <p>Це зменшить когнітивне навантаження й дозволить уникнути дублювання коду.</p>
+    </li>
+    <li>
+        <p>Надлишковість у number-vector?</p>
+        <p>Тут можна використати вбудовані засоби, щоб зробити код коротшим і чистішим:</p>
+
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (number-vector? vec)
+  (and (vector? vec)
+       (for/and ([x (in-vector vec)]) (number? x))))
+                </pre>
+            </code>
+        </div>
+
+        <p>— без явної рекурсії, з тією ж логікою.</p>
+    </li>
+    <li>
+        <p>remove-zeros можна спростити:</p>
+        <p>Твоя версія рекурсивна, але це можна зробити декларативно:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (remove-zeros vec)
+  (vector-filter (λ (x) (not (zero? x))) vec))
+                </pre>
+            </code>
+        </div>
+        <p>Це значно коротше, легше читається і працює так само.</p>
+    </li>
+    <li>
+        <p>read-vector має побічний ефект (рекурсивне самовикликання)</p>
+        <p>Це не критично, але якщо говорити про "clean code", то краще відділяти читання від перевірки даних:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (read-vector)
+  (let loop ()
+    (printf "Введіть вектор: ")
+    (define vec (read))
+    (if (and (vector? vec) (number-vector? vec))
+        vec
+        (begin
+          (printf "Некоректні вхідні дані\n")
+          (loop)))))
+                </pre>
+            </code>
+        </div>
+        <p>Так код читається плавніше (і без повторного виклику самої функції по імені).</p>
+    </li>
+    <li>
+        <p>Назви змінних і функцій</p>
+        <p>Назви в цілому гарні, але arranged-vector і do-arrange трохи розмиті.</p>
+        <p>Можна чіткіше:</p>
+        <ul>
+            <li>arrange-alternating-signs</li>
+            <li>build-alternating-vector</li>
+        </ul>
+        <p>Це зробить намір функції очевидним навіть без читання коментарів.</p>
+    </li>
+</ol>
+
+<h4>Завдання 2</h4>
+
+<p>Введний запит: "чи відповідає даний код на мові програмування racket критеріям простоти та clean code? (код завдання №2)"</p>
+
+<p>Відповідь Chat GPT:</p>
+
+<p>Код — чистий, зрозумілий і структурований, і в загальному відповідає принципам простоти та clean code.</p>
+<p>Однак є кілька невеликих моментів, які можна покращити для ще більшої ясності, узгодженості й ефективності</p>
+<p>Розберімо детально 👇</p>
+
+<p>✅ Що зроблено дуже добре</p>
+<ol>
+    <li>
+        Зрозуміла структура
+        <ul>
+            <li>Код має логічний порядок: спочатку утилітарні функції, потім основна логіка, потім запуск моделі.</li>
+            <li>Це відповідає clean-code принципу “top-down readability” — головна функція (model) знаходиться ближче до кінця, після всіх допоміжних</li>
+        </ul>
+    </li>
+    <li>
+        Гарні й послідовні імена
+        <ul>
+            <li>read-clamp, print-queue, generate-start-queue, add-new-customer, remove-customer-from-queue — усі назви чітко описують, що саме робить функція</li>
+            <li>Використовується єдиний стиль (слова через дефіс), що відповідає стилю Racket</li>
+        </ul>
+    </li>
+    <li>
+        Коментарі змістовні, не зайві
+        <ul>
+            <li>Кожен блок має короткий опис — “що робить”, а не “як саме” (це правильний рівень деталізації).</li>
+            <li>Це робить код зрозумілим навіть без глибокого аналізу логіки</li>
+        </ul>
+    </li>
+    <li>
+        Рекурсивна модель (model) реалізована чисто
+        <ul>
+            <li>Вона не змінює глобальних змінних, працює лише через параметри</li>
+            <li>Це відповідає функціональному стилю (immutable state + рекурсія замість циклів)</li>
+        </ul>
+    </li>
+    <li>
+        Мінімум дублювання
+        <ul>
+            <li>Повторювані операції (додавання, видалення клієнта, друк черги) винесені у власні функції.</li>
+            <li>Код не містить великих умовних “монстрів”.</li>
+        </ul>
+    </li>
+    <li>
+        Інтерактивна частина (читання параметрів) також чиста й логічно згрупована
+    </li>
+</ol>
+
+<p>⚠️ Що можна трохи покращити</p>
+
+<ol>
+    <li>
+        <p>Використання (reverse (queue->list q)) у queue-tail</p>
+        <p>Це неефективно, бо створює копію всього списку при кожному виклику.</p>
+        <p>Краще просто пройти по черзі один раз, наприклад:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (queue-tail q)
+  (if (queue-empty? q)
+      #f
+      (for/last ([x (in-list (queue->list q))]) x)))
+                </pre>
+            </code>
+        </div>
+        <p>Це читається так само, але не створює зворотної копії</p>
+    </li>
+    <li>
+        <p>read-clamp не перевіряє тип введення</p>
+        <p>Якщо користувач введе щось нечислове (наприклад "abc"), програма впаде з помилкою</p>
+        <p>🟢 Рішення:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (read-clamp min max)
+  (define input (read))
+  (if (number? input)
+      (cond
+        [(< input min) min]
+        [(> input max) max]
+        [else input])
+      (begin
+        (printf "Некоректні дані, спробуйте ще раз: ")
+        (read-clamp min max))))
+                </pre>
+            </code>
+        </div>
+        <p>Так користувач не зламає програму випадковим введенням.</p>
+    </li>
+    <li>
+        <p>print-queue двічі вставляє порожній рядок</p>
+        <p>Маємо \n\n, тобто два переноси. Це не помилка, але виглядає як “зайвий шум”.</p>
+        <p>Краще залишити один або явно пояснити в коментарі, якщо подвійний перенос має естетичну мету.</p>
+    </li>
+    <li>
+        <p>У model є дублювання викликів (print-time passed-time) та (print-queue q)</p>
+        <p>Те саме робиться в кожній гілці cond.</p>
+        <p>🟢 Можна винести спільну частину в один виклик:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (model q [passed-time 0])
+  (when (< passed-time DURATION)
+    (define add-new-customer? (= 0 (modulo passed-time NEW_CUSTOMER_TIME)))
+    (define remove-customer? (and (= 0 (modulo passed-time SERVICE_TIME)) (not (queue-empty? q))))
+
+    (when (or (= passed-time 0) add-new-customer? remove-customer?)
+      (print-time passed-time))
+
+    (when remove-customer? (remove-customer-from-queue q))
+    (when add-new-customer? (add-new-customer q))
+    (when (or (= passed-time 0) add-new-customer? remove-customer?) (print-queue q))
+
+    (model q (+ passed-time 1))))
+                </pre>
+            </code>
+        </div>
+        <p>Це зменшує дублювання й підвищує читабельність</p>
+    </li>
+    <li>
+        <p>Імена констант (QUEUE_SIZE, SERVICE_TIME, …)</p>
+        <p>У Racket зазвичай не прийнято писати константи у верхньому регістрі, бо це більше в стилі C.</p>
+        <p>Краще:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define queue-size ...)
+(define service-time ...)
+                </pre>
+            </code>
+        </div>
+        <p>Але це вже естетика — твій варіант теж допустимий, якщо ти хочеш підкреслити “глобальність” цих значень.</p>
+    </li>
+</ol>
+            </details>
+            <details id="conclusion" open>
+                <summary>Висновок</summary>
+                <p>
+    В даній роботі було продемонстровано роботу з векторами та чергами в racket. 
+    В першому завданні, яке вимагає роботу з векторами, максимально уникалося 
+    використання списків, надаючи перевагу функціям роботи з векторами. Для 
+    другого завдання використовувалися черги з пакету data/queue
+</p>
+            </details>
+        </main>
+    </div>
+
+    <script src="assets/script.js"></script>
+</body>
+
+</html>
