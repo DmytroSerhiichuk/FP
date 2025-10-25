@@ -202,90 +202,76 @@
 (displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
 (newline)
 
-; Читає значення з консолі та обмежує його до діапазону [min; max]
-(define (read-clamp min max)
-  (define input (read))
-  (cond
-    [(< input min) min]
-    [(> input max) max]
-    [else input]))
+; Читає з консолі не дробове число, що більше 0
+(define (read-exact-number)
+	(define num (read))
+	(cond
+		[(and (number? num) (> num 0) (exact? num)) num]
+		[else (printf "Введено некоректні дані\n") (read-exact-number)]))
 
-; Виводить чергу у консоль
-(define (print-queue queue)
-  (printf "Черга: ~a\n\n" (queue->list queue)))
+; Повертає випадкове ціле число від 1 до max включно
+(define (random-int max)
+	(inexact->exact (+ 1 (floor (* (random) max)))))
 
-; Генерує початкову чергу з елементами від 1 до size
-(define (generate-start-queue size)
-  (define q (make-queue))
-  (define (fill-iter [iter 1])
-    (enqueue! q iter)
-    (when (< iter size) (fill-iter (+ iter 1))))
-  (fill-iter)
-  q)
+; Збільшеє значення символа на 1
+(define (increment-char char)
+	(integer->char (+ 1 (char->integer char))))
 
-; Приймає загальний час в секундах ти виводить його у форматі: x хвилин y секунд
-(define (print-time total-seconds)
-  (define minutes (quotient total-seconds 60))
-  (define seconds (remainder total-seconds 60))
-  (printf "Час від початку моделювання: ~a хвилин ~a секунд\n" minutes seconds))
+; Заповнює чергу покупцями, які мають такий вигляд: (Ідентифікатор . К-сть товарів)
+; - size: кількість елементів, які необхідно додати
+; - max-number-of-products: максимальна кількість товарів у клієнта
+; - name: ідентифікатор поточного покупця
+; - index: індекс поточної ітерації
+(define (generate-queue size max-number-of-products [name #\A] [index 0])
+  (when (< index size)
+		(enqueue! queue (cons name (random-int max-number-of-products)))
+		(define next-name (increment-char name))
+		(generate-queue size max-number-of-products next-name (+ index 1))))
 
-(printf "Введіть розмір черги [5; 25]: ")
-(define QUEUE_SIZE (read-clamp 5 25))
-(printf "Вкажіть час обслуговування одного клієнта (сек) [30; 300]: ")
-(define SERVICE_TIME (read-clamp 30 300))
-(printf "Вкажіть час, за який до черги додається новий клієнт (сек) [60; 180]: ")
-(define NEW_CUSTOMER_TIME (read-clamp 60 180))
-(define START_QUEUE_MAX_SIZE (min QUEUE_SIZE 15))
-(printf "Вкажіть початковий розмір черги: [0; ~a]: " START_QUEUE_MAX_SIZE)
-(define START_QUEUE_LENGTH (read-clamp 0 START_QUEUE_MAX_SIZE))
-(printf "Вкажіть час моделювання (хв) [10; 30]: ")
-(define DURATION (* (read-clamp 10 30) 60))
+; Виводить чергу в консоль
+(define (print-queue q)
+	(displayln (queue->list q)))
 
-; Повертає хвіст черги або #false, якщо черга пуста
-(define (queue-tail q)
-  (if (queue-empty? q) #f (car (reverse (queue->list q)))))
+; Моделює чергу в магазині
+; - q: черга покупців
+; - iter: поточна ітерація
+(define (model q [iter 0])
+	(cond 
+		[(not (queue-empty? q))
+			(printf "Ітерація: ~a\n" (+ 1 iter))
+			(define client (dequeue! q))
+			(printf "Зараз обслуговується клієнт: ~a\n" client)
+			(define served-client (cons (car client) (- (cdr client) 1)))
 
-; Додає нового клієнта до черги q. Новий клієнт має значення на 1 більше останнього або 1, якщо черга пуста
-(define (add-new-customer q)
-  (define tail (queue-tail q))
-  (if (number? tail)
-    (enqueue! q (+ 1 tail))
-    (enqueue! q 1))
-  (printf "Клієнт ~a приєднався до черги\n" (queue-tail q)))
+			(cond
+				[(zero? (cdr served-client))
+					(printf "Клієнта ~a було обслужено, він покидає чергу\n" (car served-client))]
+				[else 
+					(printf "У клієнта ~a залишилося ~a товарів, він повертається в кінець черги\n" (car served-client) (cdr served-client))
+					(enqueue! q served-client)])
 
-; Видаляє останній елемент черги, моделюючи ситуацію, коли клієнта обслужено
-(define (remove-customer-from-queue q)
-  (when (not (queue-empty? q))
-    (printf "Клієнта ~a було обслужено\n" (dequeue! q))))
+			(printf "Черга на кінець даної ітерації: ")
+			(print-queue q)
+			(newline)
+			(model q (+ iter 1))]
+		[else iter]))
 
-; Ітеративна модель, яка виконує кожну секунду моделі
-; - q: черга клієнтів
-; - passed-time: час, що пройшоов від початку моделювання (в секундах)
-(define (model q [passed-time 0])
-  (when (< passed-time DURATION)
-    (define add-new-customer? (= 0 (modulo passed-time NEW_CUSTOMER_TIME)))
-    (define remove-customer? (and (= 0 (modulo passed-time SERVICE_TIME)) (not (queue-empty? q))))
-    (cond
-      [(= passed-time 0)
-        (print-time passed-time)
-        (print-queue q)]
-      [(and add-new-customer? remove-customer?)
-        (print-time passed-time)
-        (remove-customer-from-queue q)
-        (add-new-customer q)
-        (print-queue q)]
-      [add-new-customer? 
-        (print-time passed-time)
-        (add-new-customer q)
-        (print-queue q)]
-      [remove-customer?
-        (print-time passed-time)
-        (remove-customer-from-queue q)
-        (print-queue q)])
-    (model q (+ passed-time 1))))
+(define queue (make-queue))
 
-(define my-queue (generate-start-queue START_QUEUE_LENGTH))
-(model my-queue)</pre>
+(displayln "Введіть початковий розмір черги:")
+(define queue-size (read-exact-number))
+(displayln "Введіть максимальну кількість товарів у покупця:")
+(define max-number-of-products (read-exact-number))
+(newline)
+
+(generate-queue queue-size max-number-of-products)
+
+(printf "Початкова черга: ")
+(print-queue queue)
+(newline)
+
+(define iterations (model queue))
+(printf "Було пройдено ~a ітерацій" iterations)</pre>
                     </code>
                 </div>
             </details>
@@ -442,59 +428,48 @@
 
 <p>Відповідь Chat GPT:</p>
 
-<p>Код — чистий, зрозумілий і структурований, і в загальному відповідає принципам простоти та clean code.</p>
-<p>Однак є кілька невеликих моментів, які можна покращити для ще більшої ясності, узгодженості й ефективності</p>
-<p>Розберімо детально 👇</p>
-
-<p>✅ Що зроблено дуже добре</p>
+<p>✅ Що зроблено добре</p>
 <ol>
     <li>
-        Зрозуміла структура
+        Чітка структура програми
         <ul>
-            <li>Код має логічний порядок: спочатку утилітарні функції, потім основна логіка, потім запуск моделі.</li>
-            <li>Це відповідає clean-code принципу “top-down readability” — головна функція (model) знаходиться ближче до кінця, після всіх допоміжних</li>
+            <li>Код логічно поділений на функції, кожна з яких виконує одну зрозумілу задачу.</li>
+            <li>Імена функцій зрозумілі: read-exact-number, generate-queue, model, print-queue — все інтуїтивно.</li>
         </ul>
     </li>
     <li>
-        Гарні й послідовні імена
+        Коментарі якісні
         <ul>
-            <li>read-clamp, print-queue, generate-start-queue, add-new-customer, remove-customer-from-queue — усі назви чітко описують, що саме робить функція</li>
-            <li>Використовується єдиний стиль (слова через дефіс), що відповідає стилю Racket</li>
+            <li>Короткі й чітко пояснюють призначення функції та параметри</li>
+            <li>Використано формат, подібний до docstring у Python — це гарно</li>
         </ul>
     </li>
     <li>
-        Коментарі змістовні, не зайві
+        Валідація введення
         <ul>
-            <li>Кожен блок має короткий опис — “що робить”, а не “як саме” (це правильний рівень деталізації).</li>
-            <li>Це робить код зрозумілим навіть без глибокого аналізу логіки</li>
+            <li>Функція read-exact-number має перевірку на тип, знак і цілісність — це демонструє увагу до надійності</li>
         </ul>
     </li>
     <li>
-        Рекурсивна модель (model) реалізована чисто
+        Чистий функціональний стиль
         <ul>
-            <li>Вона не змінює глобальних змінних, працює лише через параметри</li>
-            <li>Це відповідає функціональному стилю (immutable state + рекурсія замість циклів)</li>
+            <li>Рекурсія використана природно для Racket (generate-queue, model).</li>
+            <li>Використовуються імунні структури даних та прості операції без зайвих побічних ефектів (окрім enqueue/dequeue, що є необхідним)</li>
         </ul>
     </li>
     <li>
-        Мінімум дублювання
+        Добре відокремлені обов’язки
         <ul>
-            <li>Повторювані операції (додавання, видалення клієнта, друк черги) винесені у власні функції.</li>
-            <li>Код не містить великих умовних “монстрів”.</li>
+            <li>Є функції для вводу, генерації, виводу та моделювання</li>
+            <li>Основна логіка не перемішана з побічними діями (наприклад, друком)</li>
         </ul>
-    </li>
-    <li>
-        Інтерактивна частина (читання параметрів) також чиста й логічно згрупована
     </li>
 </ol>
 
-<p>⚠️ Що можна трохи покращити</p>
-
+<p>⚠️ Що можна покращити</p>
 <ol>
     <li>
-        <p>Використання (reverse (queue->list q)) у queue-tail</p>
-        <p>Це неефективно, бо створює копію всього списку при кожному виклику.</p>
-        <p>Краще просто пройти по черзі один раз, наприклад:</p>
+        <p>Неочевидна глобальна змінна queue</p>
         <div id="code-wrapper-container">
             <code class="code">
                 <div class="copy-code-top-container">
@@ -503,21 +478,14 @@
                         <img class="copy-code-icon" src="assets/copy-icon.svg">
                     </button>
                 </div>
-                
                 <pre class="code-text">
-(define (queue-tail q)
-  (if (queue-empty? q)
-      #f
-      (for/last ([x (in-list (queue->list q))]) x)))
+(define queue (make-queue))
                 </pre>
             </code>
         </div>
-        <p>Це читається так само, але не створює зворотної копії</p>
-    </li>
-    <li>
-        <p>read-clamp не перевіряє тип введення</p>
-        <p>Якщо користувач введе щось нечислове (наприклад "abc"), програма впаде з помилкою</p>
-        <p>🟢 Рішення:</p>
+        <p>→ Цю змінну краще передавати як параметр до generate-queue, щоб уникати глобального стану.</p>
+        <p>Чому: глобальні змінні зменшують модульність і повторне використання коду.</p>
+        <p>✅ Кращий варіант:</p>
         <div id="code-wrapper-container">
             <code class="code">
                 <div class="copy-code-top-container">
@@ -526,32 +494,16 @@
                         <img class="copy-code-icon" src="assets/copy-icon.svg">
                     </button>
                 </div>
-                
                 <pre class="code-text">
-(define (read-clamp min max)
-  (define input (read))
-  (if (number? input)
-      (cond
-        [(< input min) min]
-        [(> input max) max]
-        [else input])
-      (begin
-        (printf "Некоректні дані, спробуйте ще раз: ")
-        (read-clamp min max))))
+(define (generate-queue size max-number-of-products [name #\A] [index 0] [q (make-queue)])
+  (when (< index size)
+    (enqueue! q (cons name (random-int max-number-of-products)))
+    (generate-queue size max-number-of-products (increment-integer name) (+ index 1) q))
+  q)
                 </pre>
             </code>
         </div>
-        <p>Так користувач не зламає програму випадковим введенням.</p>
-    </li>
-    <li>
-        <p>print-queue двічі вставляє порожній рядок</p>
-        <p>Маємо \n\n, тобто два переноси. Це не помилка, але виглядає як “зайвий шум”.</p>
-        <p>Краще залишити один або явно пояснити в коментарі, якщо подвійний перенос має естетичну мету.</p>
-    </li>
-    <li>
-        <p>У model є дублювання викликів (print-time passed-time) та (print-queue q)</p>
-        <p>Те саме робиться в кожній гілці cond.</p>
-        <p>🟢 Можна винести спільну частину в один виклик:</p>
+        <p>Тоді виклик:</p>
         <div id="code-wrapper-container">
             <code class="code">
                 <div class="copy-code-top-container">
@@ -560,30 +512,15 @@
                         <img class="copy-code-icon" src="assets/copy-icon.svg">
                     </button>
                 </div>
-                
                 <pre class="code-text">
-(define (model q [passed-time 0])
-  (when (< passed-time DURATION)
-    (define add-new-customer? (= 0 (modulo passed-time NEW_CUSTOMER_TIME)))
-    (define remove-customer? (and (= 0 (modulo passed-time SERVICE_TIME)) (not (queue-empty? q))))
-
-    (when (or (= passed-time 0) add-new-customer? remove-customer?)
-      (print-time passed-time))
-
-    (when remove-customer? (remove-customer-from-queue q))
-    (when add-new-customer? (add-new-customer q))
-    (when (or (= passed-time 0) add-new-customer? remove-customer?) (print-queue q))
-
-    (model q (+ passed-time 1))))
+(define queue (generate-queue queue-size max-number-of-products))
                 </pre>
             </code>
         </div>
-        <p>Це зменшує дублювання й підвищує читабельність</p>
     </li>
     <li>
-        <p>Імена констант (QUEUE_SIZE, SERVICE_TIME, …)</p>
-        <p>У Racket зазвичай не прийнято писати константи у верхньому регістрі, бо це більше в стилі C.</p>
-        <p>Краще:</p>
+        <p>Надлишкове дублювання логіки у model</p>
+        <p>Блок:</p>
         <div id="code-wrapper-container">
             <code class="code">
                 <div class="copy-code-top-container">
@@ -592,14 +529,84 @@
                         <img class="copy-code-icon" src="assets/copy-icon.svg">
                     </button>
                 </div>
-                
                 <pre class="code-text">
-(define queue-size ...)
-(define service-time ...)
+(printf "Ітерація: ~a\n" (+ 1 iter))
+...
+(printf "Черга на кінець даної ітерації: ")
+(print-queue q)
+(newline)
                 </pre>
             </code>
         </div>
-        <p>Але це вже естетика — твій варіант теж допустимий, якщо ти хочеш підкреслити “глобальність” цих значень.</p>
+        <p>можна винести у допоміжну функцію, щоб model стала компактнішою.</p>
+    </li>
+    <li>
+        <p>Можна спростити умову у read-exact-number</p>
+        <p>Зараз вона трохи громіздка:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                <pre class="code-text">
+(and (number? num) (> num 0) (exact? num))
+                </pre>
+            </code>
+        </div>
+        <p>✅ Можна зробити більш читабельно:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                <pre class="code-text">
+(define (positive-exact-integer? n)
+  (and (exact? n) (integer? n) (> n 0)))
+                </pre>
+            </code>
+        </div>
+        <p>і потім:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                <pre class="code-text">
+(when (not (positive-exact-integer? num))
+  ...)
+                </pre>
+            </code>
+        </div>
+    </li>
+    <li>
+        <p>Можна уникнути рекурсії для моделювання</p>
+        <p>Функція model рекурсивна, але це можна реалізувати через цикл (for чи let loop), що спростить розуміння логіки та зменшить навантаження на стек:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                <pre class="code-text">
+(let loop ([q queue] [iter 0])
+  (unless (queue-empty? q)
+    ...
+    (loop q (+ iter 1))))
+                </pre>
+            </code>
+        </div>
+        <p>Хоча для Racket рекурсія — норма, у цьому випадку цикл виглядав би природніше</p>
     </li>
 </ol>
             </details>
