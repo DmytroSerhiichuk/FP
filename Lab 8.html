@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/style.css">
+    <title>Lab 8</title>
+</head>
+
+<body>
+    <div class="navigation-container">
+        <nav class="lab-nav">
+            <a href="index.html">Титулка</a>
+            <a href="Lab 1.html">Lab 1</a>
+            <a href="Lab 2.html">Lab 2</a>
+            <a href="Lab 3.html">Lab 3</a>
+            <a href="Lab 4.html">Lab 4</a>
+            <a href="Lab 5.html">Lab 5</a>
+            <a href="Lab 6.html">Lab 6</a>
+            <a href="Lab 7.html">Lab 7</a>
+            <a href="Lab 8.html">Lab 8</a>
+        </nav>
+
+        <nav class="page-nav">
+            <a href="#goal">Мета</a>
+            <a href="#conditions">Умова</a>
+            <a href="#analysis">Аналіз</a>
+            <a href="#hipo" id="hipo-ref">HIPO Діаграма</a>
+            <a href="#code-section">Код</a>
+            <a href="#results">Результати</a>
+            <a href="#validation">Перевірка</a>
+            <a href="#ai">Перевірка коду ШІ</a>
+            <a href="#conclusion">Висновок</a>
+        </nav>
+    </div>
+
+    <header>
+        <h1>Lab 8</h1>
+    </header>
+
+    <div id="main-wrapper">
+        <main>
+            <details id="goal" open>
+                <summary>Мета</summary>
+                <p>Опанувати теоретичні основи символьних обчислень мовами функціонального програмування. Розробити програми символьного диференціювання та реалізації арифметики поліномів</p>
+            </details>
+            <details id="conditions" open>
+                <summary>Умова</summary>
+                <img src="assets/images/lab8-conditions.png" alt="">
+            </details>
+            <details id="analysis" open>
+                <summary>Аналіз</summary>
+                <p>
+    Для виконання даного завдання можна використовувати списки та пари. Значення 
+    елемента поліному можна зображати через пару, де перший елемент - сам 
+    коефіцієнт, а другий - значення степеня. Така структура добре підходить для 
+    обчислення похідної, де до кожного елементу, ми множемо його коефіцієнт на 
+    поточне значення степеня, а сам степінь зменшуємо на 1 
+</p>
+            </details>
+            <details id="hipo" open>
+                <summary>HIPO Діаграма</summary>
+                <img src="assets/images/lab8-hipo.png" alt="">
+            </details>
+            <details id="code-section" open>
+                <summary>Код</summary>
+                <div id="code-wrapper-container">
+                    <code class="code">
+                        <div class="copy-code-top-container">
+                            Code: Task1
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text">#lang racket
+
+(displayln "Лаб 8 (Варіант 11) - Завданя 1")
+(displayln "Виконав - Сергійчук Дмитро (Підгрупа 6)")
+(newline)
+
+; Пробує прочитати з консолі ціле число (к-сть коефіцієнтів поліному), що більше 0
+; Повертає число або #f, якщо було введено некоректні дані
+(define (try-read-size)
+  (define input (read))
+  (if (and (number? input) (> input 0) (exact? input)) input #f))
+
+; Читає к-сть коефіцієнтів поліному з консолі
+; Працює у циклі, поки не буде введено коректні дані
+(define (read-size)
+  (printf "Введіть кількість коефіцієнтів поліному: ")
+  (define size (try-read-size))
+  (if size
+    size
+    (begin
+      (printf "Некоректні дані\n")
+      (read-size))))
+
+; Пробує прочитати число (занчення коефіцієнту поліному) з консолі
+; Повертає число або #f, якщо було введено некоректні дані
+(define (try-read-number)
+  (define input (read))
+  (if (number? input) input #f))
+
+; Читає значення коефіцієнта поліному з консолі
+; Працює у циклі, поки не буде введено коректні дані
+(define (read-number)
+  (printf "Введіть значення коефіцієнту: ")
+  (define num (try-read-number))
+  (if num
+    num
+    (begin
+      (printf "Некоректні дані\n")
+      (read-number))))
+
+; Виводить поліном у консоль
+(define (print-polynom polynom)
+  (printf "f(x) = ")
+  (define (iter-print polynom-left [empty? #t])
+    (cond 
+      [(null? polynom-left) (when empty? (printf "0"))]
+      [else
+        (let* ([elem (car polynom-left)]
+               [coef (car elem)]
+               [pow (cdr elem)])
+          (cond
+            [(zero? coef) (iter-print (cdr polynom-left) empty?)]
+            [else
+              (when (not (= (length polynom-left) (length polynom)))
+              (printf " + "))
+              (printf "~a" coef)
+              (cond
+                [(> pow 1) (printf "x^~a" pow)]
+                [(= pow 1) (printf "x")])
+            (iter-print (cdr polynom-left) #f)]))]))
+  (iter-print polynom)
+  (newline))
+
+; Створює поліному на основі введених значень з консолі
+(define (create-polynom)
+  (define size (read-size))
+
+  (define (fill [polynom '()] [iter 0])
+    (if (< iter size)
+      (fill (cons (cons (read-number) (- size iter 1)) polynom) (+ iter 1))
+      (reverse polynom)))
+  (fill))
+
+; Скорочує число
+; - num: число, яке необхідно скоротити
+; - d: кількість цифр після коми
+(define (round-number num [d 3])
+  (define k (expt 10 d))
+  (/ (round (* num k)) k))
+
+; Повертає похідну многочлена
+; - polynom: поліном, для якого шукається похідна
+;  derivative: похідна вхідного полінома
+(define (get-derivative polynom [derivative '()])
+  (cond
+    [(null? polynom) (reverse derivative)]
+    [else
+      (let* ([elem (car polynom)]
+             [coef (car elem)]
+             [pow (cdr elem)])
+        (if (zero? pow)
+          (get-derivative (cdr polynom) derivative)
+          (get-derivative (cdr polynom) (cons (cons (round-number (* coef pow)) (- pow 1)) derivative))))]))
+
+(define p1 (create-polynom))
+(newline)
+(printf "Вхідний поліном:\n")
+(print-polynom p1)
+(newline)
+
+(define p1-1 (get-derivative p1))
+(printf "Перша похідна:\n")
+(print-polynom p1-1)
+(newline)
+
+(define p1-2 (get-derivative p1-1))
+(printf "Друга похідна:\n")
+(print-polynom p1-2)
+(newline)
+
+(define p1-3 (get-derivative p1-2))
+(printf "Третя похідна:\n")
+(print-polynom p1-3)
+(newline)</pre>
+                    </code>
+
+                    <code class="code code-2">
+                        <div class="copy-code-top-container">
+                            Code: Task 2
+                            <button class="copy-code-btn">
+                                <img class="copy-code-icon" src="assets/copy-icon.svg">
+                            </button>
+                        </div>
+                        
+                        <pre class="code-text code-text-2"></pre>
+                    </code>
+                </div>
+            </details>
+            <details id="results" open>
+                <summary>Результати</summary>
+                <img src="assets/images/lab8-result.png" alt="">
+            </details>
+            <details id="validation" open>
+                <summary>Перевірка</summary>
+                <p>Для перевірки коректності пошуку похідних було використано даний онлайн ресурс: <a href="https://www.derivative-calculator.net">Derivative Calculator</a></p>
+
+<img src="assets/images/lab8-validation.png" alt="">
+            </details>
+            <details id="ai" open>
+                <summary>Перевірка коду ШІ</summary>
+                <p>Введний запит: "чи відповідає даний код на мові програмування racket критеріям простоти та clean code? (код завдання)"</p>
+
+<p>Відповідь Chat GPT:</p>
+
+<p>✅ Що зроблено добре</p>
+
+<ol>
+    <li>
+        <p>Коментарі зрозумілі й доречні</p>
+        <p>Вони пояснюють, що робить кожна функція, і в більшості випадків — які параметри вона приймає та що повертає</p>
+    </li>
+    <li>
+        <p>Функції мають єдину відповідальність</p>
+        <p>Кожна функція робить щось одне:</p>
+        <ul>
+            <li>try-read-size / try-read-number — валідація вводу</li>
+            <li>read-size / read-number — читання з повторною спробою</li>
+            <li>print-polynom — вивід</li>
+            <li>create-polynom — побудова полінома</li>
+            <li>get-derivative — знаходження похідної</li>
+        </ul>
+        <p>Це дуже добре з точки зору clean code</p>
+    </li>
+    <li>
+        <p>Послідовне найменування.</p>
+        <p>Усі функції названі у схожому стилі (read-*, try-read-*, print-* тощо), що покращує читабельність</p>
+    </li>
+    <li>
+        <p>Функціональний стиль з рекурсією використано правильно</p>
+        <p>Код не має явних побічних ефектів (окрім I/O), і логіка чиста</p>
+    </li>
+    <li>
+        <p>Коректна робота з базовими випадками</p>
+        <p>Наприклад, якщо всі коефіцієнти нулі, print-polynom виведе f(x) = 0.</p>
+    </li>
+</ol>
+
+<p>⚙️ Що можна покращити</p>
+
+<ol>
+    <li>
+        <p>Повторення коду у read-size та read-number</p>
+        <p>В обох випадках ти маєш однакову логіку:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(if value
+    value
+    (begin
+      (printf "Некоректні дані\n")
+      (function-again)))
+                </pre>
+            </code>
+        </div>
+        <p>Це можна узагальнити в окрему функцію:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (read-with-prompt prompt try-read)
+  (printf "~a" prompt)
+  (define value (try-read))
+  (if value
+      value
+      (begin
+        (printf "Некоректні дані\n")
+        (read-with-prompt prompt try-read))))
+                </pre>
+            </code>
+        </div>
+        <p>Тоді:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (read-size)
+  (read-with-prompt "Введіть кількість коефіцієнтів поліному: " try-read-size))
+
+(define (read-number)
+  (read-with-prompt "Введіть значення коефіцієнта: " try-read-number))
+                </pre>
+            </code>
+        </div>
+        <p>Це зменшує дублювання коду — головний принцип clean code.</p>
+    </li>
+    <li>
+        <p>print-polynom можна спростити</p>
+        <p>Твоя функція зараз досить складна через вкладену рекурсію.</p>
+        <p>Її можна зробити більш декларативною, наприклад:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (term->string coef pow)
+  (cond
+    [(zero? coef) ""]
+    [(= pow 0) (format "~a" coef)]
+    [(= pow 1) (format "~ax" coef)]
+    [else (format "~ax^~a" coef pow)]))
+
+(define (print-polynom polynom)
+  (define terms
+    (filter (λ(s) (not (string=? s "")))
+            (map (λ(p) (term->string (car p) (cdr p))) polynom)))
+  (printf "f(x) = ~a\n"
+          (if (null? terms) "0" (string-join terms " + "))))
+                </pre>
+            </code>
+        </div>
+        <p>Тут код коротший, легше читати й простіше змінювати</p>
+    </li>
+    <li>
+        <p>Змінна empty? у print-polynom виглядає зайвою</p>
+        <p>Вона служить лише для перевірки, чи перший елемент виведено — але цього можна уникнути, якщо формувати список рядків і потім об’єднати через string-join, як показано вище</p>
+    </li>
+    <li>
+        <p>Відсутня функція для обчислення похідної n-го порядку</p>
+        <p>Ти тричі викликаєш get-derivative вручну. Можна зробити так:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(define (nth-derivative poly n)
+  (if (zero? n)
+      poly
+      (nth-derivative (get-derivative poly) (- n 1))))
+                </pre>
+            </code>
+        </div>
+        <p>Тоді:</p>
+        <div id="code-wrapper-container">
+            <code class="code">
+                <div class="copy-code-top-container">
+                    Code
+                    <button class="copy-code-btn">
+                        <img class="copy-code-icon" src="assets/copy-icon.svg">
+                    </button>
+                </div>
+                
+                <pre class="code-text">
+(for ([i (in-range 4)])
+  (printf "~a похідна:\n" i)
+  (print-polynom (nth-derivative p1 i))
+  (newline))
+                </pre>
+            </code>
+        </div>
+        <p>Це гнучкіше й чистіше</p>
+    </li>
+</ol>
+            </details>
+            <details id="conclusion" open>
+                <summary>Висновок</summary>
+                <p>
+    В даній лабораторній роботі було продемонстровано роботу з символьними 
+    обчисленнями. Дане завдання не вимагало застосування чогось нового, що вже 
+    було пройдено під час попередніх лабораторних робіт
+</p>
+            </details>
+        </main>
+    </div>
+
+    <script src="assets/script.js"></script>
+</body>
+
+</html>
